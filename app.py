@@ -28,7 +28,7 @@ with app.app_context():
         user_id = session.get("user_id")
 
         if not user_id:
-            return jsonify({"error": "Unauthorized"}), 401
+            return jsonify({"message": "Unauthorized"})
         
         user = User.query.filter_by(id=user_id).first()
         return jsonify({
@@ -46,10 +46,10 @@ with app.app_context():
         user = User.query.filter_by(email=email).first()
 
         if user is None:
-            return jsonify({"error": "Unauthorized"}), 401
+            return jsonify({"error": "Invalid credentials"}), 401
 
         if not bcrypt.check_password_hash(user.password, password):
-            return jsonify({"error": "Unauthorized"}), 401
+            return jsonify({"error": "Invalid credentials"}), 401
         
         session["user_id"] = user.id
 
@@ -70,7 +70,7 @@ with app.app_context():
         user_exists = User.query.filter_by(email=email).first() is not None
 
         if user_exists:
-            return jsonify({"error": "User already exists"}), 409
+            return jsonify({"message": "User already exists"}), 409
 
         hashed_password = bcrypt.generate_password_hash(password)
         new_user = User(first_name=first_name, last_name=last_name, email=email, password=hashed_password, )
@@ -101,7 +101,7 @@ with app.app_context():
         image = Image.query.filter_by(id=id).first()
 
         if not image:
-            return jsonify({"error": "User not found"}), 404
+            return jsonify({"message": "User not found"}), 404
         
         return jsonify({
             "id": image.id,
@@ -164,37 +164,24 @@ with app.app_context():
         user_id = session.get("user_id")
 
         if not user_id:
-            return jsonify({"error": "Unauthorized"}), 401
+            return jsonify({"message": "Unauthorized"}), 401
         
         if image_data:
             # Read the image content
             image_content = image_data.read()
             image_base64 = base64.b64encode(image_content).decode('utf-8')
 
-            # # Create a Vision client object
-            # vision_client = vision.ImageAnnotatorClient()
+            # Create a Vision client object
+            vision_client = vision.ImageAnnotatorClient()
 
-            # # Construct the image object from the content
-            # image = vision.Image(content=image_content)
+            # Construct the image object from the content
+            image = vision.Image(content=image_content)
 
-            # # Send the image and features to the Vision API
-            # response = vision_client.text_detection(image=image)
+            # Send the image and features to the Vision API
+            response = vision_client.text_detection(image=image)
+            extracted_info = response.text_annotations[0]
+            extracted_text = " ".join(extracted_info.description.split('\n'))
             
-            ocr_result = [
-                # First item is an empty dictionary
-                {},
-                # Subsequent items with 'description' keys
-                {
-                    "description": "testing\nasdf"
-                },
-                {
-                    "description": "testing\nasdf"
-                }
-            ]
-            
-            extracted_text = " ".join([item['description'].replace("\n", " ") for item in ocr_result if 'description' in item])
-            
-            # texts = [item['description'].replace("\n", " ") for item in response.text_annotations if 'description' in item]
             word_count = len(extracted_text.split(" "))
             
             
@@ -224,7 +211,7 @@ with app.app_context():
             })
                     
         else:
-            return jsonify({"error": "No image file provided"}), 400
+            return jsonify({"message": "No image file provided"}), 400
         
 
 
