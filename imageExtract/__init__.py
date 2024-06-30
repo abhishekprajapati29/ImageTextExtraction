@@ -8,6 +8,8 @@ import base64
 from sqlalchemy import func
 from datetime import datetime, timedelta
 
+image_extraction_bp = None
+
 image_extraction_bp = Blueprint('image_extraction', __name__)
 
 @image_extraction_bp.route("/<id>", methods=["GET"])

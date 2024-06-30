@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_session import Session
 from models import db, User
 from app import bcrypt
+auth_bp = None
 
 auth_bp = Blueprint('auth', __name__)
 
